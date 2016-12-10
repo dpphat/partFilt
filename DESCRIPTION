@@ -1,0 +1,20 @@
+Package: partFilt
+Title: Particle Filtration
+Version: 0.0.0.9000
+Authors@R: person("Dan", "Puddephatt", email = "dan.puddephatt@ghd.com", role = c("aut", "cre"))
+Description: This package is used to calculate particle filtration
+    over distance. It is based on the work by Tobiason and O'Melia (1988):
+    Physicochemical Aspects of Particle Removal in Depth Filtration.
+Imports:
+    tidyverse,
+    magrittr,
+    tibble
+Depends:
+    R (>= 3.3.2),
+    tidyverse,
+    magrittr,
+    tibble
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1
