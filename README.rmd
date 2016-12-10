@@ -1,20 +1,32 @@
-partFilt README
-================
-Dan Puddephatt
-2016-12-10
+---
+title: "partFilt README"
+author: "Dan Puddephatt"
+date: "2016-12-10"
+output: 
+    github_document
+---
+The R library partFilt is used to calculate particulate filtration based on the methods proposed by J.E.
+Tobiason and C.R. O'Melia in [Physicochemical Aspects of Particle Removeal in Depth Filtration (1988)](http://www.jstor.org/stable/41292092?seq=1#page_scan_tab_contents).
+The library can be installed with the following code:
 
-The R library partFilt is used to calculate particulate filtration based on the methods proposed by J.E. Tobiason and C.R. O'Melia in [Physicochemical Aspects of Particle Removeal in Depth Filtration (1988)](http://www.jstor.org/stable/41292092?seq=1#page_scan_tab_contents). The library can be installed with the following code:
-
-``` r
+```{r INSTALL, message = FALSE, warning = FALSE}
 library(devtools)
 install_github("dpphat/partFilt")
 ```
 
-I will not go into the details of the physics and chemistry involved in particle filtration that are discussed in Tobiason and O'Melia (1988) suffice it to say that suspended solids interact with soil particles (collector particles) through size exclusion, gravitational attraction (sedimentation), and chemical attraction and repulsion. The chemical interaction term (ALPHA) is a fitted parameter that needs to be investigated through calibration. The units of measurement in partFilt are based on those used in the paper and include "cm", "g", "s". There is an option to specify the units of hydraulic conductivity to be either "cm/s" or "ft/day". Length units can also be specified as either "cm", "m", or "ft".
+I will not go into the details of the physics and chemistry involved in particle filtration that are discussed
+in Tobiason and O'Melia (1988) suffice it to say that suspended solids interact with soil particles (collector
+ particles) through size exclusion, gravitational attraction (sedimentation), and chemical attraction and
+ repulsion. The chemical interaction term (ALPHA) is a fitted parameter that needs to be investigated through 
+ calibration. The units of measurement in partFilt are based on those used in the paper and include "cm", "g", "s".
+ There is an option to specify the units of hydraulic conductivity to be either "cm/s" or "ft/day". Length units
+ can also be specified as either "cm", "m", or "ft".
+ 
+The single-collector efficiency (eta_parm) is the efficiency of a single soil particle to attract a suspended
+solid from flowing groundwater. The eta_parm() function is used to calculate the single-collector efficiency.
+Figure 4 from Tobiason and O'Melia (1988) is prepared using the following code:
 
-The single-collector efficiency (eta\_parm) is the efficiency of a single soil particle to attract a suspended solid from flowing groundwater. The eta\_parm() function is used to calculate the single-collector efficiency. Figure 4 from Tobiason and O'Melia (1988) is prepared using the following code:
-
-``` r
+```{r ETA_PARM}
 library(scales)
 ETA <- eta_parm(Kx = 0.14 * 0.4, 
                 TEMP = 25, 
@@ -29,7 +41,7 @@ ETA <- tibble(PART_SIZE = 10^(seq(-2, 2, 0.1)),
 
 ETA %>% ggplot(aes(x = PART_SIZE, y = ETA))+
         geom_line(size = 1) +
-        scale_x_log10(name = "Particle Size (Âµm)", 
+        scale_x_log10(name = "Particle Size (µm)", 
                       limit = c(0.01, 100), 
                       breaks = 10^(-10:10), 
                       minor_breaks = c(1:9 %o% 10^(-10:10)), 
@@ -57,22 +69,17 @@ ETA %>% ggplot(aes(x = PART_SIZE, y = ETA))+
                       )
 ```
 
-![](README_files/figure-markdown_github/ETA_PARM-1.png)
-
 When there is no chemical interaction (i.e., ALPHA == 1) the minimum collector efficiency occurs when the suspended sediment is:
 
-``` r
+```{r ETA_MIN}
 ETA %>% filter(ETA == min(ETA))
 ```
 
-    ## # A tibble: 1 × 2
-    ##   PART_SIZE          ETA
-    ##       <dbl>        <dbl>
-    ## 1         1 0.0007073822
+The calculated reduction values presented on Figure 13 when the ALPHA parameter is 0.01 (i.e., there is a chemical repulsion
+acting on suspended particles) can be replicated with the following:
 
-The calculated reduction values presented on Figure 13 when the ALPHA parameter is 0.01 (i.e., there is a chemical repulsion acting on suspended particles) can be replicated with the following:
+```{r REDUCTION_VALUES}
 
-``` r
 CC0 <- cc0_filt(LENGTH = 60, 
          LENGTH_UNIT = "cm", 
          alpha = 0.01, 
@@ -89,7 +96,7 @@ CC0 <- tibble(CC0 = CC0,
 
 CC0 %>% ggplot(aes(x = DIA_SUSP, y = CC0)) +      
             geom_line(size = 1) +
-            scale_x_log10(name = "Particle Radii (Âµm)", 
+            scale_x_log10(name = "Particle Radii (µm)", 
                           breaks = 10^(-10:10), 
                           minor_breaks = c(1:9 %o% 10^(-10:10)), 
                           labels = scales::trans_format("log10", math_format(10^.x)), 
@@ -118,13 +125,14 @@ CC0 %>% ggplot(aes(x = DIA_SUSP, y = CC0)) +
                           )        
 ```
 
-    ## Warning: Removed 68 rows containing missing values (geom_path).
+We can use the command L_filt to determine the particle travel distance required to achieve a suspended solid reduction to meet standards.
+In the following example, I will assume that we want to reduce suspended solids concentrations to 1e-10 of the initial concentrations.
+I will assume that the sediment has a hydraulic conductivity value of 0.02 cm/s for coarse sands. The groundwater temperature is assumed to
+be 10 degrees Celcius with is common for temperate climates. Porosity will also be assigned as 0.21. We will investigate a range of hydraulic
+gradients that range from quite small to quite large, spanning 6 orders of magnitude.
 
-![](README_files/figure-markdown_github/REDUCTION_VALUES-1.png)
+```{r L_FILT}
 
-We can use the command L\_filt to determine the particle travel distance required to achieve a suspended solid reduction to meet standards. In the following example, I will assume that we want to reduce suspended solids concentrations to 1e-10 of the initial concentrations. I will assume that the sediment has a hydraulic conductivity value of 0.02 cm/s for coarse sands. The groundwater temperature is assumed to be 10 degrees Celcius with is common for temperate climates. Porosity will also be assigned as 0.21. We will investigate a range of hydraulic gradients that range from quite small to quite large, spanning 6 orders of magnitude.
-
-``` r
 LENGTHS <- L_filt(C_C0 = 1e-10, 
                   alpha = 0.01, 
                   Kx = 0.02, 
@@ -162,5 +170,3 @@ LENGTHS %>% ggplot(aes(x = GRAD, y = LENGTHS)) +
                           axis.title.y        = element_text(size = 9)
                           )
 ```
-
-![](README_files/figure-markdown_github/L_FILT-1.png)
